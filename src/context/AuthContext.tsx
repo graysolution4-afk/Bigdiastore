@@ -32,7 +32,7 @@ interface AuthContextValue {
   activeEmail: string | null;
   activeUid: string | null;
   activeName: string | null;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ isAdmin: boolean; email: string | null }>;
   registerCustomer: (input: {
     fullName: string;
     email: string;
@@ -135,8 +135,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsub();
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
-    await signInWithPopup(auth, googleAuthProvider);
+  const signInWithGoogle = useCallback(async (): Promise<{
+    isAdmin: boolean;
+    email: string | null;
+  }> => {
+    googleAuthProvider.setCustomParameters({ prompt: 'select_account' });
+    const cred = await signInWithPopup(auth, googleAuthProvider);
+    const user = cred.user;
+    setFirebaseUser(user);
+
+    const isBootstrap =
+      user.email?.toLowerCase() === 'graysolution4@gmail.com' && user.emailVerified;
+    if (isBootstrap) {
+      setFirestoreAdminRole('super_admin');
+      return { isAdmin: true, email: user.email };
+    }
+
+    const adminSnap = await getDoc(doc(db, 'admins', user.uid)).catch(() => null);
+    if (adminSnap && adminSnap.exists() && adminSnap.data()?.active === true) {
+      setFirestoreAdminRole(adminSnap.data()?.role as AdminRole);
+      return { isAdmin: true, email: user.email };
+    }
+
+    setFirestoreAdminRole(null);
+    return { isAdmin: false, email: user.email };
   }, []);
 
   const registerCustomer = useCallback(

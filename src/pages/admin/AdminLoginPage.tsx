@@ -71,8 +71,16 @@ export function AdminLoginPage() {
   const handleGoogleAdmin = async () => {
     setSubmitting(true);
     try {
-      await signInWithGoogle();
-      navigate('/admin');
+      const res = await signInWithGoogle();
+      if (res.isAdmin) {
+        notify('Administrator Google session authenticated.', 'success');
+        navigate('/admin');
+      } else {
+        notify(
+          `The Google account ${res.email || ''} is not authorized as a store administrator.`,
+          'error'
+        );
+      }
     } catch (err: any) {
       notify(err?.message || 'Google authentication failed.', 'error');
     } finally {
@@ -98,118 +106,120 @@ export function AdminLoginPage() {
 
         {checking ? (
           <div className="py-10 text-center text-sm text-neutral-500">Checking initialization status...</div>
-        ) : !initialized ? (
-          <form onSubmit={handleInitSubmit} className="space-y-4">
-            <div className="p-3 bg-[#F5F5F5] border border-neutral-200 text-xs text-neutral-700 flex gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#9E7C16] shrink-0 mt-0.5" />
-              <span>
-                Create the primary Super Administrator account. Public admin registration locks permanently after this step.
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                Password (min 8 chars)
-              </label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-3.5 bg-[#111111] text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#9E7C16] transition-colors disabled:opacity-50"
-            >
-              {submitting ? 'Initializing...' : 'Create Super Administrator'}
-            </button>
-          </form>
         ) : (
           <div className="space-y-5">
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                  Administrator Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
-                />
-              </div>
+            {!initialized ? (
+              <form onSubmit={handleInitSubmit} className="space-y-4">
+                <div className="p-3 bg-[#F5F5F5] border border-neutral-200 text-xs text-neutral-700 flex gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#9E7C16] shrink-0 mt-0.5" />
+                  <span>
+                    Create the primary Super Administrator password account, or sign in directly with your authorized Google account below.
+                  </span>
+                </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
-                />
-              </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+                  />
+                </div>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-3.5 bg-[#111111] text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#9E7C16] transition-colors flex items-center justify-center gap-2"
-              >
-                <Lock className="w-3.5 h-3.5" /> Sign In to Dashboard
-              </button>
-            </form>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
+                    Password (min 8 chars)
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-3.5 bg-[#111111] text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#9E7C16] transition-colors disabled:opacity-50"
+                >
+                  {submitting ? 'Initializing...' : 'Create Super Administrator'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
+                    Administrator Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border border-neutral-300 px-3 py-2.5 text-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-3.5 bg-[#111111] text-white text-xs font-semibold uppercase tracking-widest hover:bg-[#9E7C16] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Lock className="w-3.5 h-3.5" /> Sign In to Dashboard
+                </button>
+              </form>
+            )}
 
             <div className="flex items-center gap-3 text-xs text-neutral-400">
               <div className="flex-1 h-px bg-neutral-200" />
-              <span>OR AUTHORIZED GOOGLE</span>
+              <span>OR SIGN IN WITH GOOGLE</span>
               <div className="flex-1 h-px bg-neutral-200" />
             </div>
 
@@ -217,9 +227,9 @@ export function AdminLoginPage() {
               type="button"
               onClick={handleGoogleAdmin}
               disabled={submitting}
-              className="w-full py-3 border border-[#111111] text-xs font-semibold uppercase tracking-widest hover:bg-[#F5F5F5]"
+              className="w-full py-3 border border-[#111111] text-xs font-semibold uppercase tracking-widest hover:bg-[#F5F5F5] transition-colors disabled:opacity-50"
             >
-              Sign In with Authorized Google Account
+              Continue with Google
             </button>
           </div>
         )}
