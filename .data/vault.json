@@ -1,0 +1,9 @@
+{
+  "sessionSecret": "d2cae6d523abdf1decf69f4fbdac24140789d985aaba386fb7aaba4c7808d4c5",
+  "encryptionSecret": "84500f7e03c883db10f9757932ec65f1511f1f99b5466acb3f50947b5f5ea5cd",
+  "admins": [],
+  "customers": [],
+  "providerSecrets": {},
+  "notificationConfig": {},
+  "verifiedReferences": {}
+}
